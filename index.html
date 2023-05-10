@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-CSV Means</title>
+<!-- <script src="https://code.jquery.com/jquery-3.6.4.slim.min.js" integrity="sha256-a2yjHM4jnF9f54xUQakjZGaqYs/V1CYvWpoqZzC2/Bw=" crossorigin="anonymous"></script> -->
+<script src="js/jquery.min.js"></script>
+<script src="js/csvreadnmeans.js"></script>
+<style>
+body { font-family: Arial, Helvetica, sans-serif; }
+dialog::backdrop {background-color: #3336;}
+div.action-btns { display: inline-block; margin: 0 6px; }
+ul.files { list-style: none; padding-left: 1em; }
+ul.files li { border: 1px solid transparent; display: flex; flex-wrap: wrap; gap: 10px; }
+ul.files li label { flex: 1; }
+ul.files a,ul.files button { font-size: 0.7em; cursor: pointer; }
+ul.files li:has(input:checked) { background-color: rgba(255, 251, 211, 0.8); }
+ul.files li:has(input:checked):nth-child(even) { background-color: rgba(255, 239, 169, 0.7); }
+ul.files li:hover, ul.settings li:hover{background-color: #e7e7e7;cursor: pointer;}
+.cursp,button,.files li,.files label { cursor: pointer;user-select:none; }
+.dResults { border: 1px solid #eee; padding: 4px; margin: 4px; background-color: #eee; color: #555; font-family: Verdana, Geneva, Tahoma, sans-serif; }
+.dResults .print { font-weight: bold; color: #444 }
+.lbl-bdr { border: 1px solid #ddd; margin-right: 6px; padding: 1px; border-radius: 4px; user-select: none; }
+.lbl-bdr:has(input:checked) { background-color: #ddd8; }
+.lbl-bdr:hover { background-color: #eee7; }
+.flex { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; }
+.bg-gray { background-color: #eee; }
+.color-gray-4,.f-idx { color: #555}
+/* Settings-bar */
+.settings.disp *{cursor: pointer;}
+.disp a,.disp b,.disp .btn { border: 1px solid #ddd8; border-radius: 1em; line-height: 1em; padding: 2px 0.5em; display: inline-block; }
+.disp a:hover,.disp .btn{ background-blend-mode: luminosity ; background-color: #eee9; }
+ul.settings li{padding:0.35em;}
+.left-auto{left:auto;}
+</style>
+</head>
+
+<body>
+	<div class="fl-misc-global">
+
+		<div class="dResults" style="">
+			Overall Results: <span class="files-count"></span>
+			<div class="lgMean"> Longitude Mean: <span class="print">&HorizontalLine;</span></div>
+			<div class="ltMean"> Latitude Mean: <span class="print">&HorizontalLine;</span></div>
+		</div>
+
+		<form onsubmit="return false;" class="selecTools" style="display:block;gap:6px;margin:6px 0; min-width:300px">
+			<label class="cursp" style="display:block; padding:6px; margin:6px 0; background-color: #eee;">
+				Add File(s): <input id="inp_csvFilesv97wn" type="file" multiple autocomplete="true" name="csv_files" class="iab64 cursp" onchange="gAddFiles(this.files)">
+			</label>
+			<div class="flex bg-gray">
+				<label class="cursp lbl-bdr"><input type="checkbox" name="cbx_slctAll" id="cbx_slctAll" onchange="$('.files input[type=checkbox]').prop('checked', $(this).prop('checked'));if(!$(this).prop('checked')){htmlTxt='',csvIndex=0;gFilesToRead=[];$('.selecTools .files-count').html(`(${gFilesToRead.length})`);$('.op-print').html('');};readSelectedFiles()"> Select All </label>
+				<button onclick="readSelectedFiles()">Read Selected <span class="files-count"></span></button>
+
+				<div class="settings dlgWrapper" style="display:inline-block;position: relative;">
+					<a onclick="var d=document.querySelector('dialog#djDlgStgsV74');d.open?d.close():d.showModal();" style="padding:3px; border:1px solid;box-sizing:border-box;margin:1px;min-width: 110px;display: inline-block;text-align: right;" class="cursp">
+						⚙ Settings ▾
+					</a>
+					<dialog id="djDlgStgsV74" class="" style="border:1px solid #c4c4c4;padding:16px;box-shadow:0 0 3px -2px;width: 250px;margin: auto;" >
+						<ul class="settings" style="padding-left:0em;list-style:none;font-size:13px;margin:0">
+							<li >Longitude-column : 			 <input type="number" name="lgCol" id="inp_lgCol" step="1" value="1" size="3" maxlength="3" style="width:40px" oninput="window.lgCol=parseInt(this.value);readSelectedFiles();"></li>
+							<li >Latitude-column  &nbsp;&nbsp; : <input type="number" name="ltCol" id="inp_ltCol" step="1" value="2" size="3" maxlength="3" style="width:40px" oninput="window.ltCol=parseInt(this.value);readSelectedFiles();"></li>
+							<li ><label class="cursp">Skip First (Header) Row?   : <input type="checkbox" name="skipFrstRow" id="inp_skipFrstRow" checked onchange="window.csvStartingRow=(this.checked?1:0);readSelectedFiles();"></label></li>
+							<li style="display:flex;justify-content:space-between;padding:1em 0;">
+								<button onclick="this.closest('dialog').close();return false;" > &checkmark; Apply</button>
+								<button onclick="this.closest('dialog').close();return false;" > &times;  Close</button>
+							</li>
+						</ul>
+					</dialog>
+				</div>
+
+			</div>
+			<div id="divFiles2ReadMlti" class="files" style="flex-flow:row;">
+				<ul class="files"></ul>
+			</div>
+		</form>
+
+		<op class="op-print" style="display: block;  overflow: auto; word-break: break-all; line-height: 1.1rem; background: rgb(238, 238, 238) none repeat scroll 0% 0%; max-height: 200px;padding: 4px;white-space: pre;grid-column: 1/3;grid-column-start: 1;"></op>
+	</div>
+
+	<!-- <script src="js/alpinejs.min.js"></script> -->
+	<!-- <script src="js/angular.min.js"></script> -->
+</body>
+
+</html>
